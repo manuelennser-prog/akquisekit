@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AkquiseKit AI — Akquise-Pakete auf Knopfdruck</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a; --surface: #111; --surface2: #1a1a1a;
+    --border: #2a2a2a; --accent: #c8f045; --text: #f0ede8; --muted: #888;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; font-weight: 300; min-height: 100vh; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: linear-gradient(rgba(200,240,69,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(200,240,69,0.03) 1px,transparent 1px);
+    background-size: 60px 60px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+  header { padding: 36px 0 20px; display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: .15em; color: var(--accent); text-transform: uppercase; }
+  .badge { font-family: 'DM Mono', monospace; font-size: 11px; background: rgba(200,240,69,.1); border: 1px solid rgba(200,240,69,.25); color: var(--accent); padding: 4px 10px; border-radius: 2px; letter-spacing: .1em; }
+  .hero { padding: 36px 0 40px; border-bottom: 1px solid var(--border); }
+  .tag { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: .15em; text-transform: uppercase; margin-bottom: 16px; }
+  h1 { font-family: 'DM Serif Display', serif; font-size: clamp(30px,6vw,56px); font-weight: 400; line-height: 1.1; margin-bottom: 16px; letter-spacing: -.02em; }
+  h1 em { font-style: italic; color: var(--accent); }
+  .sub { font-size: 15px; color: var(--muted); max-width: 460px; line-height: 1.6; }
+  .stats { display: flex; gap: 36px; padding: 18px 0; border-bottom: 1px solid var(--border); }
+  .stat-n { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--accent); }
+  .stat-l { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .form { padding: 36px 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  @media(max-width:580px){ .grid { grid-template-columns: 1fr; } }
+  .full { grid-column: 1/-1; }
+  .lbl { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+  input, select, textarea {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 300;
+    padding: 13px 15px; border-radius: 4px; outline: none; width: 100%; transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); background: var(--surface2); }
+  input::placeholder, textarea::placeholder { color: #444; }
+  select { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; }
+  select option { background: #1a1a1a; }
+  textarea { resize: vertical; min-height: 72px; }
+  .opts-lbl { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: block; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .pill { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); padding: 8px 13px; border-radius: 3px; cursor: pointer; font-size: 13px; color: var(--muted); transition: all .15s; user-select: none; }
+  .pill.on { border-color: var(--accent); color: var(--accent); background: rgba(200,240,69,.07); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .prog { height: 2px; background: var(--border); border-radius: 1px; margin-bottom: 14px; overflow: hidden; display: none; }
+  .prog.show { display: block; }
+  .prog-fill { height: 100%; background: var(--accent); width: 0; transition: width .3s ease; }
+  .btn {
+    width: 100%; background: var(--accent); color: #0a0a0a; border: none;
+    font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500;
+    letter-spacing: .12em; text-transform: uppercase; padding: 17px; border-radius: 4px;
+    cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .btn:hover:not(:disabled) { background: #d4f55c; transform: translateY(-1px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .spinner { width: 15px; height: 15px; border: 2px solid rgba(0,0,0,.2); border-top-color: #0a0a0a; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .err { margin-top: 14px; background: rgba(255,68,68,.08); border: 1px solid rgba(255,68,68,.25); color: #ff8888; padding: 13px 17px; border-radius: 4px; font-size: 14px; display: none; }
+  .err.show { display: block; }
+  .results { padding-bottom: 60px; display: none; }
+  .results.show { display: block; }
+  .res-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-top: 32px; border-top: 1px solid var(--border); }
+  .res-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; }
+  .copy-all { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; border-radius: 3px; cursor: pointer; transition: all .15s; }
+  .copy-all:hover { border-color: var(--accent); color: var(--accent); }
+  .cards { display: flex; flex-direction: column; gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; animation: fadeUp .4s ease both; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px);} to {opacity:1;transform:translateY(0);} }
+  .card-hdr { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .card-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .copy-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 4px 10px; border-radius: 2px; cursor: pointer; transition: all .15s; }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.ok { border-color: #4caf50; color: #4caf50; }
+  .card-body { padding: 20px 22px; font-size: 14px; line-height: 1.75; color: #ccc; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">AkquiseKit AI</div>
+    <div class="badge">Beta v0.1</div>
+  </header>
+
+  <div class="hero">
+    <div class="tag">// Automatisierte Vertriebspakete</div>
+    <h1>Dein komplettes<br>Akquise-Paket —<br><em>in 60 Sekunden.</em></h1>
+    <p class="sub">Firmenname eingeben. Zielgruppe definieren. KI generiert alles: Kaltakquise-Skript, E-Mails, Social Posts, Einwandbehandlung.</p>
+  </div>
+
+  <div class="stats">
+    <div><div class="stat-n">5</div><div class="stat-l">Outputs pro Run</div></div>
+    <div><div class="stat-n">&lt;60s</div><div class="stat-l">Generierungszeit</div></div>
+    <div><div class="stat-n">∞</div><div class="stat-l">Branchen</div></div>
+  </div>
+
+  <div class="form">
+    <div class="grid">
+      <div>
+        <div class="lbl">Firmenname</div>
+        <input id="firma" placeholder="z.B. Muster GmbH">
+      </div>
+      <div>
+        <div class="lbl">Branche</div>
+        <select id="branche">
+          <option value="">Branche wählen…</option>
+          <option>Handwerk & Bau</option><option>IT & Software</option>
+          <option>Gastronomie & Hotellerie</option><option>Handel & Retail</option>
+          <option>Gesundheit & Pflege</option><option>Bildung & Training</option>
+          <option>Beratung & Dienstleistung</option><option>Produktion & Industrie</option>
+          <option>Immobilien</option><option>Marketing & Agentur</option><option>Sonstige</option>
+        </select>
+      </div>
+      <div>
+        <div class="lbl">Zielgruppe / Wunschkunden</div>
+        <input id="zielgruppe" placeholder="z.B. KMUs mit 10–50 Mitarbeitern">
+      </div>
+      <div>
+        <div class="lbl">Hauptangebot / USP</div>
+        <input id="angebot" placeholder="z.B. Schnelle Montage, Festpreis">
+      </div>
+      <div class="full">
+        <div class="lbl">Besonderheiten (optional)</div>
+        <textarea id="extras" placeholder="z.B. Regional, 20 Jahre Erfahrung, Auszeichnungen…"></textarea>
+      </div>
+    </div>
+
+    <span class="opts-lbl">// Gewünschte Outputs</span>
+    <div class="pills" id="pills"></div>
+
+    <div class="prog" id="prog"><div class="prog-fill" id="progFill"></div></div>
+    <button class="btn" id="btn" onclick="generate()">
+      <span id="btnTxt">Akquise-Paket generieren</span>
+      <div class="spinner" id="spin" style="display:none"></div>
+    </button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="res-hdr">
+      <div class="res-title">Dein Akquise-Paket</div>
+      <button class="copy-all" onclick="copyAll()">Alles kopieren</button>
+    </div>
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+
+<script>
+const OUTPUTS = {
+  telefonskript:  { icon:'📞', label:'Telefon-Skript' },
+  email_erst:     { icon:'✉️',  label:'E-Mail Erstkontakt' },
+  email_followup: { icon:'🔁', label:'E-Mail Follow-up' },
+  social_post:    { icon:'💼', label:'LinkedIn Post' },
+  einwaende:      { icon:'🛡️', label:'Einwandbehandlung' },
+};
+
+let active = new Set(Object.keys(OUTPUTS));
+let currentResults = {};
+let progTimer = null;
+
+// Build pills
+const pillsEl = document.getElementById('pills');
+Object.entries(OUTPUTS).forEach(([key,{label}]) => {
+  const el = document.createElement('div');
+  el.className = 'pill on';
+  el.dataset.key = key;
+  el.innerHTML = `<div class="dot"></div>${label}`;
+  el.onclick = () => {
+    active.has(key) ? active.delete(key) : active.add(key);
+    el.classList.toggle('on', active.has(key));
+  };
+  pillsEl.appendChild(el);
+});
+
+function buildPrompt(d, outputs) {
+  const hmap = {
+    telefonskript:  ['Telefon-Skript','Kaltakquise-Telefonskript ~200 Wörter. Einstieg, Nutzenargumentation, Terminvereinbarung.'],
+    email_erst:     ['E-Mail Erstkontakt','Betreff + E-Mail ~120 Wörter. Persönlich, konkreter CTA.'],
+    email_followup: ['E-Mail Follow-up','Betreff + Follow-up ~80 Wörter für 5-7 Tage danach.'],
+    social_post:    ['LinkedIn Post','LinkedIn-Post ~150 Wörter, edukativ/storytelling.'],
+    einwaende:      ['Einwandbehandlung','5 häufigste Einwände mit Antworten. Format: Einwand → Antwort.'],
+  };
+  const sections = outputs.map(k=>`### ${hmap[k][0]}\n${hmap[k][1]}`).join('\n\n');
+  return `Du bist ein erfahrener B2B-Vertriebsexperte (DACH). Erstelle ein Akquise-Paket auf Deutsch.
+
+FIRMA: ${d.firma} | Branche: ${d.branche} | Zielgruppe: ${d.zielgruppe} | USP: ${d.angebot}${d.extras?` | Besonderheiten: ${d.extras}`:''}
+
+Erstelle NUR diese Abschnitte mit exakten ### Überschriften:
+
+${sections}
+
+Direkt, authentisch, spezifisch auf ${d.firma} zugeschnitten.`;
+}
+
+function parseResults(text, outputs) {
+  const res = {};
+  const hmap = { telefonskript:'Telefon-Skript', email_erst:'E-Mail Erstkontakt', email_followup:'E-Mail Follow-up', social_post:'LinkedIn Post', einwaende:'Einwandbehandlung' };
+  outputs.forEach(k => {
+    const rx = new RegExp(`###\\s*${hmap[k]}\\s*\\n([\\s\\S]*?)(?=###|$)`,'i');
+    const m = text.match(rx);
+    res[k] = m ? m[1].trim() : text;
+  });
+  return res;
+}
+
+function startProg() {
+  let p = 0;
+  document.getElementById('prog').classList.add('show');
+  progTimer = setInterval(()=>{ p = Math.min(p+Math.random()*3,88); document.getElementById('progFill').style.width=p+'%'; },200);
+}
+function stopProg() {
+  clearInterval(progTimer);
+  document.getElementById('progFill').style.width='100%';
+  setTimeout(()=>{ document.getElementById('prog').classList.remove('show'); document.getElementById('progFill').style.width='0'; },400);
+}
+
+async function generate() {
+  const d = {
+    firma: document.getElementById('firma').value.trim(),
+    branche: document.getElementById('branche').value,
+    zielgruppe: document.getElementById('zielgruppe').value.trim(),
+    angebot: document.getElementById('angebot').value.trim(),
+    extras: document.getElementById('extras').value.trim(),
+  };
+  const errEl = document.getElementById('err');
+  errEl.classList.remove('show');
+
+  if(!d.firma||!d.branche||!d.zielgruppe||!d.angebot){errEl.textContent='→ Bitte alle Pflichtfelder ausfüllen.';errEl.classList.add('show');return;}
+  if(active.size===0){errEl.textContent='→ Mindestens einen Output auswählen.';errEl.classList.add('show');return;}
+
+  const outputs = Object.keys(OUTPUTS).filter(k=>active.has(k));
+  const btn = document.getElementById('btn');
+  btn.disabled=true;
+  document.getElementById('btnTxt').textContent='Generiere…';
+  document.getElementById('spin').style.display='block';
+  document.getElementById('results').classList.remove('show');
+  startProg();
+
+  try {
+    const res = await fetch('/api/generate', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ messages:[{ role:'user', content:buildPrompt(d,outputs) }] })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error?.message||'Fehler '+res.status);
+    const text = (data.content||[]).map(b=>b.text||'').join('');
+    currentResults = parseResults(text, outputs);
+
+    const cards = document.getElementById('cards');
+    cards.innerHTML='';
+    outputs.forEach((k,i)=>{
+      if(!currentResults[k]) return;
+      const cfg = OUTPUTS[k];
+      const card = document.createElement('div');
+      card.className='card';
+      card.style.animationDelay=`${i*0.08}s`;
+      card.innerHTML=`
+        <div class="card-hdr">
+          <div class="card-title"><span>${cfg.icon}</span>${cfg.label}</div>
+          <button class="copy-btn" onclick="copyCard('${k}',this)">Kopieren</button>
+        </div>
+        <div class="card-body">${currentResults[k].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+      cards.appendChild(card);
+    });
+    stopProg();
+    document.getElementById('results').classList.add('show');
+    document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+  } catch(e) {
+    stopProg();
+    errEl.textContent='→ Fehler: '+e.message;
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled=false;
+    document.getElementById('btnTxt').textContent='Akquise-Paket generieren';
+    document.getElementById('spin').style.display='none';
+  }
+}
+
+function copyCard(key, btn) {
+  navigator.clipboard.writeText(currentResults[key]||'');
+  btn.textContent='✓ Kopiert'; btn.classList.add('ok');
+  setTimeout(()=>{btn.textContent='Kopieren';btn.classList.remove('ok');},2000);
+}
+
+function copyAll() {
+  const all = Object.entries(currentResults).map(([k,v])=>`=== ${OUTPUTS[k]?.label} ===\n\n${v}`).join('\n\n---\n\n');
+  navigator.clipboard.writeText(all);
+  const btn = document.querySelector('.copy-all');
+  btn.textContent='✓ Kopiert';
+  setTimeout(()=>{btn.textContent='Alles kopieren';},2000);
+}
+</script>
+</body>
+</html>
