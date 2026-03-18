@@ -243,7 +243,7 @@ async function generate() {
   startProg();
 
   try {
-    const res = await fetch('/api/generate', {
+    const res = await fetch('/.netlify/functions/generate', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ messages:[{ role:'user', content:buildPrompt(d,outputs) }] })
