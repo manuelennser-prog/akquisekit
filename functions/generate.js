@@ -1,4 +1,4 @@
-const  https = require('https');
+const https = require('https');
 
 exports.handler = async (event) => {
   const headers = {
@@ -29,7 +29,7 @@ exports.handler = async (event) => {
   }
 
   const payload = JSON.stringify({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 2500,
     messages: parsed.messages,
   });
